@@ -31,12 +31,15 @@ class PatientStateMonitor:
 
         self.currentState = HealthState.WELL
         self.survivalTime = None
+        self.stroke_num = 0
 
     def update(self, time_step, new_state):
 
         if new_state == HealthState.DEAD:
             self.survivalTime = time_step + 0.5 #correct for half cycle effect
 
+        if self.currentState == HealthState.STROKE:
+            self.stroke_num += 1
 
         self.currentState = new_state
 
@@ -45,6 +48,7 @@ class PatientStateMonitor:
             return True
         else:
             return False
+
 
 
 
@@ -71,12 +75,15 @@ class CohortOutcomes:
 
         self.survivalTimes = []
         self.nLivingPatients = None
+        self.nStrokes = []
         self.meanSurvivalTime = None
 
     def extract_outcomes(self, simulated_patients):
         for patient in simulated_patients:
             if not (patient.stateMonitor.survivalTime is None):
                 self.survivalTimes.append(patient.stateMonitor.survivalTime)
+            if not (patient.stateMonitor.stroke_num is 0):
+                self.nStrokes.append(patient.stateMonitor.stroke_num)
 
         self.meanSurvivalTime = sum(self.survivalTimes) / len(self.survivalTimes)
 

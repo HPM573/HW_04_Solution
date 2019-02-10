@@ -1,4 +1,4 @@
-import HW4 as Cls
+import Temp_State as Cls
 import SimPy.SamplePathClasses as PathCls
 import SimPy.FigureSupport as Fig
 import InputData as D
@@ -24,6 +24,14 @@ Fig.graph_histogram(
     bin_width=1
 )
 
+Fig.graph_histogram(
+    data=myCohort.cohortOutcomes.nStrokes,
+    title='Histogram of Number of Strokes',
+    x_label='Number of Strokes',
+    y_label='Count',
+    bin_width=1
+)
+
 # print the patient survival time
 print('Mean survival time (years):',
-      myCohort.cohortOutcomes.meanSurvivalTime)
+      myCohort.cohortOutcomes.meanSurvivalTime) #19.88447432762836
