@@ -12,31 +12,41 @@ class Patient:
         self.stateMonitor = PatientStateMonitor()
 
     def simulate(self, n_time_steps):
+
         t=0
 
         while self.stateMonitor.get_if_alive() and t < n_time_steps:
-            trans_prob = self.tranProbMatrix[self.stateMonitor.currentState.value] # find the transition probabilities to future states
 
-            empirical_dist = RVGs.Empirical(probabilities=trans_prob) #creae an empirical distribution
+            # find the transition probabilities to future states
+            trans_prob = self.tranProbMatrix[self.stateMonitor.currentState.value]
 
-            new_state_index = empirical_dist.sample(rng=self.rng) #sample from the empirical distribution to get a new state
+            # create an empirical distribution
+            empirical_dist = RVGs.Empirical(probabilities=trans_prob)
 
-            self.stateMonitor.update(time_step=t,new_state=HealthState(new_state_index)) #update health state
+            # sample from the empirical distribution to get a new state
+            new_state_index = empirical_dist.sample(rng=self.rng)
 
-            t += 1 #increment time
+            # update health state
+            self.stateMonitor.update(time_step=t,new_state=HealthState(new_state_index))
+
+            # increment time
+            t += 1
 
 
 class PatientStateMonitor:
     def __init__(self):
 
-        self.currentState = HealthState.WELL
+        self.currentState = HealthState.WELL    # assuming everyone starts in "Well"
         self.survivalTime = None
+        self.nStrokes = 0
 
     def update(self, time_step, new_state):
 
         if new_state == HealthState.DEAD:
-            self.survivalTime = time_step + 0.5 #correct for half cycle effect
+            self.survivalTime = time_step + 0.5  # correct for half cycle effect
 
+        if self.currentState == HealthState.STROKE:
+            self.nStrokes += 1
 
         self.currentState = new_state
 
@@ -45,7 +55,6 @@ class PatientStateMonitor:
             return True
         else:
             return False
-
 
 
 class Cohort:
@@ -70,6 +79,7 @@ class CohortOutcomes:
     def __init__(self):
 
         self.survivalTimes = []
+        self.nStrokes = []
         self.nLivingPatients = None
         self.meanSurvivalTime = None
 
@@ -77,6 +87,7 @@ class CohortOutcomes:
         for patient in simulated_patients:
             if not (patient.stateMonitor.survivalTime is None):
                 self.survivalTimes.append(patient.stateMonitor.survivalTime)
+                self.nStrokes.append(patient.stateMonitor.nStrokes)
 
         self.meanSurvivalTime = sum(self.survivalTimes) / len(self.survivalTimes)
 
@@ -86,4 +97,3 @@ class CohortOutcomes:
             times_of_changes=self.survivalTimes,
             increments=[-1]*len(self.survivalTimes)
         )
-
