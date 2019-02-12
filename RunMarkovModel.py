@@ -11,10 +11,17 @@ myCohortNoTemp = Cls.Cohort(id=1,
 myCohortWithTemp = Cls.Cohort(id=1,
                               pop_size=D.POP_SIZE,
                               transition_matrix=D.TRANS_PROB_MATRIX_2)
+# Bonus model
+myCohorBonus = Cls.CohortBonus(id=1,
+                               pop_size=D.POP_SIZE,
+                               prob_stroke_well=D.PROB_STROKE_WELL,
+                               prob_recurrent_stroke=D.PROB_RECURRENT_STROKE,
+                               prob_survive=D.PROB_SURVIVE_STROKE)
 
-# simulate both models
+# simulate all models
 myCohortNoTemp.simulate(n_time_steps=D.SIM_TIME_STEPS)
 myCohortWithTemp.simulate(n_time_steps=D.SIM_TIME_STEPS)
+myCohorBonus.simulate(n_time_steps=D.SIM_TIME_STEPS)
 
 # sample paths
 PathCls.graph_sample_path(
@@ -60,3 +67,5 @@ print('Mean survival time for the model without temp state (years):',
       myCohortNoTemp.cohortOutcomes.meanSurvivalTime)
 print('Mean survival time for the model with temp state (years):',
       myCohortWithTemp.cohortOutcomes.meanSurvivalTime)
+print('Mean survival time for the bonus model (years):',
+      myCohorBonus.cohortOutcomes.meanSurvivalTime)
