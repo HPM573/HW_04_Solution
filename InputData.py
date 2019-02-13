@@ -4,25 +4,9 @@ from enum import Enum
 POP_SIZE = 2000         # cohort population size
 SIM_TIME_STEPS = 50    # length of simulation (years)
 
-PROB_STROKE_WELL = 0.05         # annual probability of stroke in state Well
-PROB_RECURRENT_STROKE = 0.2     # annual probability of recurrent stroke
-PROB_SURVIVE_STROKE = 0.7       # probability of surviving a stroke
-
-# transition probability matrix without temporary state
-TRANS_PROB_MATRIX_1 = [
-    [1-PROB_STROKE_WELL, PROB_STROKE_WELL*PROB_SURVIVE_STROKE, PROB_STROKE_WELL*(1-PROB_SURVIVE_STROKE)], # WELL
-    [1-PROB_RECURRENT_STROKE, PROB_RECURRENT_STROKE*PROB_SURVIVE_STROKE, PROB_RECURRENT_STROKE*(1-PROB_SURVIVE_STROKE)], # POST-STROKE
-    [0, 0, 1]   # DEATH
-    ]
-
-
-# transition probability matrix with temporary state Stroke
-TRANS_PROB_MATRIX_2 = [
-    [1-PROB_STROKE_WELL, PROB_STROKE_WELL*PROB_SURVIVE_STROKE, PROB_STROKE_WELL*(1-PROB_SURVIVE_STROKE), 0], # WELL
-    [0,  PROB_RECURRENT_STROKE*PROB_SURVIVE_STROKE, PROB_RECURRENT_STROKE*(1-PROB_SURVIVE_STROKE), 1-PROB_RECURRENT_STROKE],  # POST-STROKE 0.3*0.2
-    [0, 0, 0, 1],    # DEATH
-    [0, 1, 0, 0]  # STROKE
-    ]
+P_STROKE = 0.05         # annual probability of stroke in state Well
+P_RE_STROKE = 0.2     # annual probability of recurrent stroke
+P_SURV = 0.7       # probability of surviving a stroke
 
 
 class HealthState(Enum):
@@ -32,6 +16,22 @@ class HealthState(Enum):
     DEAD = 2
     STROKE = 3
 
+
+# transition probability matrix without temporary state
+TRANS_PROB_MATRIX_1 = [
+    [1-P_STROKE,    P_STROKE*P_SURV,                    P_STROKE*(1-P_SURV)],       # WELL
+    [0,             (1-P_RE_STROKE)+P_RE_STROKE*P_SURV, P_RE_STROKE*(1-P_SURV)],    # POST-STROKE
+    [0,             0,                                  1]                          # DEATH
+    ]
+
+
+# transition probability matrix with temporary state Stroke
+TRANS_PROB_MATRIX_2 = [
+    [1 - P_STROKE,  P_STROKE,       0,          0],             # WELL
+    [0,             1-P_RE_STROKE,  0,          P_RE_STROKE],   # POST-STROKE
+    [0,             0,              0,          1],             # DEATH
+    [0,             P_SURV,         1-P_SURV,   0]       # STROKE
+    ]
 
 print('Transition probability matrix without Stroke: ', TRANS_PROB_MATRIX_1)
 print('Transition probability matrix with Stroke:', TRANS_PROB_MATRIX_2)
