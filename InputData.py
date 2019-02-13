@@ -27,7 +27,7 @@ TRANS_PROB_MATRIX_1 = [
 
 # transition probability matrix with temporary state Stroke
 TRANS_PROB_MATRIX_2 = [
-    [1 - P_STROKE,  P_STROKE,       0,          0],             # WELL
+    [1 - P_STROKE,  0,              0,          P_STROKE],             # WELL
     [0,             1-P_RE_STROKE,  0,          P_RE_STROKE],   # POST-STROKE
     [0,             0,              0,          1],             # DEATH
     [0,             P_SURV,         1-P_SURV,   0]       # STROKE
