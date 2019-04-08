@@ -75,3 +75,6 @@ print('Mean survival time for the model with temp state (years):',
       myCohortWithTemp.cohortOutcomes.meanSurvivalTime)
 print('Mean survival time for the bonus model (years):',
       myCohorBonus.cohortOutcomes.meanSurvivalTime)
+
+
+print(myCohortWithTemp.cohortOutcomes.nStrokes)

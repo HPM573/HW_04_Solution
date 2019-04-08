@@ -27,7 +27,7 @@ class Patient:
             new_state_index = empirical_dist.sample(rng=self.rng)
 
             # update health state
-            self.stateMonitor.update(time_step=t,new_state=HealthState(new_state_index))
+            self.stateMonitor.update(time_step=t, new_state=HealthState(new_state_index))
 
             # increment time
             t += 1
@@ -91,10 +91,13 @@ class PatientStateMonitor:
 
     def update(self, time_step, new_state):
 
+        if self.currentState == HealthState.DEAD:
+            return
+
         if new_state == HealthState.DEAD:
             self.survivalTime = time_step + 0.5  # correct for half cycle effect
 
-        if self.currentState == HealthState.STROKE:
+        if new_state == HealthState.STROKE:
             self.nStrokes += 1
 
         self.currentState = new_state
@@ -155,9 +158,9 @@ class CohortOutcomes:
 
     def extract_outcomes(self, simulated_patients):
         for patient in simulated_patients:
-            if not (patient.stateMonitor.survivalTime is None):
+            if patient.stateMonitor.survivalTime is not None:
                 self.survivalTimes.append(patient.stateMonitor.survivalTime)
-                self.nStrokes.append(patient.stateMonitor.nStrokes)
+            self.nStrokes.append(patient.stateMonitor.nStrokes)
 
         self.meanSurvivalTime = sum(self.survivalTimes) / len(self.survivalTimes)
 
