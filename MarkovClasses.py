@@ -7,12 +7,12 @@ class Patient:
     def __init__(self, id, transition_matrix):
 
         self.id = id
-        self.rng = RVGs.RNG(seed=id)
         self.tranProbMatrix = transition_matrix
         self.stateMonitor = PatientStateMonitor()
 
     def simulate(self, n_time_steps):
 
+        rng = RVGs.RNG(seed=self.id)
         t = 0
 
         while self.stateMonitor.get_if_alive() and t < n_time_steps:
@@ -24,7 +24,7 @@ class Patient:
             empirical_dist = RVGs.Empirical(probabilities=trans_prob)
 
             # sample from the empirical distribution to get a new state
-            new_state_index = empirical_dist.sample(rng=self.rng)
+            new_state_index = empirical_dist.sample(rng=rng)
 
             # update health state
             self.stateMonitor.update(time_step=t, new_state=HealthState(new_state_index))
@@ -37,7 +37,6 @@ class PatientBonus:
     def __init__(self, id, prob_stroke_well, prob_recurrent_stroke, prob_survive):
 
         self.id = id
-        self.rng = RVGs.RNG(seed=id)
         self.probStrokeWell = prob_stroke_well
         self.probRecurrentStroke = prob_recurrent_stroke
         self.probSurvive = prob_survive
@@ -45,12 +44,13 @@ class PatientBonus:
 
     def simulate(self, n_time_steps):
 
+        rng = RVGs.RNG(seed=self.id)
         t = 0
 
         while self.stateMonitor.get_if_alive() and t < n_time_steps:
 
             # if the patient is in Well or Post-Stoke
-            if self.stateMonitor.currentState is HealthState.WELL or HealthState.POST_STROKE:
+            if self.stateMonitor.currentState in [HealthState.WELL, HealthState.POST_STROKE]:
 
                 # find the probability of stroke
                 if self.stateMonitor.currentState is HealthState.WELL:
@@ -59,13 +59,13 @@ class PatientBonus:
                     p_stroke = self.probRecurrentStroke
 
                 # decide if the patient will have a stroke
-                if self.rng.sample() < p_stroke:
+                if rng.sample() < p_stroke:
 
                     # increment the number of strokes
                     self.stateMonitor.nStrokes += 1
 
                     # decide if the patient will survive this stoke
-                    if self.rng.sample() < self.probSurvive:
+                    if rng.sample() < self.probSurvive:
                         new_state_index = HealthState.POST_STROKE.value
                     else:
                         new_state_index = HealthState.DEAD.value
@@ -134,7 +134,7 @@ class CohortBonus:
         self.cohortOutcomes = CohortOutcomes()
 
         for i in range(pop_size):
-            patient = PatientBonus(id=id* pop_size + i,
+            patient = PatientBonus(id=id * pop_size + i,
                                    prob_stroke_well=prob_stroke_well,
                                    prob_recurrent_stroke=prob_recurrent_stroke,
                                    prob_survive=prob_survive)
@@ -165,7 +165,7 @@ class CohortOutcomes:
         self.meanSurvivalTime = sum(self.survivalTimes) / len(self.survivalTimes)
 
         self.nLivingPatients = PathCls.PrevalencePathBatchUpdate(
-            name = '# of living patients',
+            name='# of living patients',
             initial_size= len(simulated_patients),
             times_of_changes=self.survivalTimes,
             increments=[-1]*len(self.survivalTimes)
