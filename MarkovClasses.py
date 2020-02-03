@@ -166,7 +166,7 @@ class CohortOutcomes:
 
         self.nLivingPatients = PathCls.PrevalencePathBatchUpdate(
             name='# of living patients',
-            initial_size= len(simulated_patients),
+            initial_size=len(simulated_patients),
             times_of_changes=self.survivalTimes,
             increments=[-1]*len(self.survivalTimes)
         )
