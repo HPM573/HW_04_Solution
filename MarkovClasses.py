@@ -1,36 +1,35 @@
 import SimPy.RandomVariantGenerators as RVGs
 import SimPy.SamplePathClasses as PathCls
 from InputData import HealthState
+import SimPy.MarkovClasses as Markov
 
 
 class Patient:
-    def __init__(self, id, transition_matrix):
+    def __init__(self, id, transition_prob_matrix):
 
         self.id = id
-        self.tranProbMatrix = transition_matrix
+        self.markovJump = Markov.MarkovJumpProcess(transition_prob_matrix=transition_prob_matrix)
         self.stateMonitor = PatientStateMonitor()
 
     def simulate(self, n_time_steps):
 
+        # random number generator
         rng = RVGs.RNG(seed=self.id)
-        t = 0
 
-        while self.stateMonitor.get_if_alive() and t < n_time_steps:
+        k = 0   # simulation time step
 
-            # find the transition probabilities to future states
-            trans_prob = self.tranProbMatrix[self.stateMonitor.currentState.value]
-
-            # create an empirical distribution
-            empirical_dist = RVGs.Empirical(probabilities=trans_prob)
-
-            # sample from the empirical distribution to get a new state
-            new_state_index = empirical_dist.sample(rng=rng)
+        while self.stateMonitor.get_if_alive() and k < n_time_steps:
+            # sample from the Markov jump process to get a new state
+            # (returns an integer from {0, 1, 2, ...})
+            new_state_index = self.markovJump.get_next_state(
+                current_state_index=self.stateMonitor.currentState.value,
+                rng=rng)
 
             # update health state
-            self.stateMonitor.update(time_step=t, new_state=HealthState(new_state_index))
+            self.stateMonitor.update(time_step=k, new_state=HealthState(new_state_index))
 
             # increment time
-            t += 1
+            k += 1
 
 
 class PatientBonus:
@@ -45,12 +44,13 @@ class PatientBonus:
     def simulate(self, n_time_steps):
 
         rng = RVGs.RNG(seed=self.id)
-        t = 0
 
-        while self.stateMonitor.get_if_alive() and t < n_time_steps:
+        k = 0
+
+        while self.stateMonitor.get_if_alive() and k < n_time_steps:
 
             # if the patient is in Well or Post-Stoke
-            if self.stateMonitor.currentState in [HealthState.WELL, HealthState.POST_STROKE]:
+            if self.stateMonitor.currentState is HealthState.WELL or HealthState.POST_STROKE:
 
                 # find the probability of stroke
                 if self.stateMonitor.currentState is HealthState.WELL:
@@ -76,10 +76,10 @@ class PatientBonus:
                 new_state_index = self.stateMonitor.currentState
 
             # update health state
-            self.stateMonitor.update(time_step=t, new_state=HealthState(new_state_index))
+            self.stateMonitor.update(time_step=k, new_state=HealthState(new_state_index))
 
             # increment time
-            t += 1
+            k += 1
 
 
 class PatientStateMonitor:
@@ -116,7 +116,7 @@ class Cohort:
         self.cohortOutcomes = CohortOutcomes()
 
         for i in range(pop_size):
-            patient = Patient(id=id*pop_size + i, transition_matrix=transition_matrix)
+            patient = Patient(id=id*pop_size + i, transition_prob_matrix=transition_matrix)
             self.patients.append(patient)
 
     def simulate(self, n_time_steps):
@@ -134,7 +134,7 @@ class CohortBonus:
         self.cohortOutcomes = CohortOutcomes()
 
         for i in range(pop_size):
-            patient = PatientBonus(id=id * pop_size + i,
+            patient = PatientBonus(id=id* pop_size + i,
                                    prob_stroke_well=prob_stroke_well,
                                    prob_recurrent_stroke=prob_recurrent_stroke,
                                    prob_survive=prob_survive)
@@ -165,8 +165,8 @@ class CohortOutcomes:
         self.meanSurvivalTime = sum(self.survivalTimes) / len(self.survivalTimes)
 
         self.nLivingPatients = PathCls.PrevalencePathBatchUpdate(
-            name='# of living patients',
-            initial_size=len(simulated_patients),
+            name = '# of living patients',
+            initial_size= len(simulated_patients),
             times_of_changes=self.survivalTimes,
             increments=[-1]*len(self.survivalTimes)
         )
