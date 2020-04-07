@@ -9,7 +9,7 @@ import InputData as D
 # build the model
 myCohortNoTemp = Cls.Cohort(id=1,
                             pop_size=D.POP_SIZE,
-                            transition_matrix=D.TRANS_PROB_MATRIX_1)
+                            transition_prob_matrix=D.TRANS_PROB_MATRIX_1)
 # simulate
 myCohortNoTemp.simulate(n_time_steps=D.SIM_TIME_STEPS)
 
@@ -36,7 +36,7 @@ Hist.plot_histogram(
 # build the model
 myCohortWithTemp = Cls.Cohort(id=1,
                               pop_size=D.POP_SIZE,
-                              transition_matrix=D.TRANS_PROB_MATRIX_2)
+                              transition_prob_matrix=D.TRANS_PROB_MATRIX_2)
 
 # simulate
 myCohortWithTemp.simulate(n_time_steps=D.SIM_TIME_STEPS)

@@ -110,21 +110,24 @@ class PatientStateMonitor:
 
 
 class Cohort:
-    def __init__(self, id, pop_size, transition_matrix):
+    def __init__(self, id, pop_size, transition_prob_matrix):
         self.id = id
-        self.patients = []
+        self.popSize = pop_size
+        self.transitionProbMatrix = transition_prob_matrix
         self.cohortOutcomes = CohortOutcomes()
-
-        for i in range(pop_size):
-            patient = Patient(id=id*pop_size + i, transition_prob_matrix=transition_matrix)
-            self.patients.append(patient)
 
     def simulate(self, n_time_steps):
 
-        for patient in self.patients:
+        patients = []
+        for i in range(self.popSize):
+            patient = Patient(
+                id=self.id * self.popSize + i, transition_prob_matrix=self.transitionProbMatrix)
+            patients.append(patient)
+
+        for patient in patients:
             patient.simulate(n_time_steps)
 
-        self.cohortOutcomes.extract_outcomes(self.patients)
+        self.cohortOutcomes.extract_outcomes(patients)
 
 
 class CohortBonus:
