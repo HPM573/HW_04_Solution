@@ -1,32 +1,36 @@
-import SimPy.RandomVariateGenerators as RVGs
-import SimPy.Plots.SamplePaths as Path
-from InputData import HealthState
+import numpy as np
+
 import SimPy.Markov as Markov
+import SimPy.Plots.SamplePaths as Path
+from InputData import HealthStates
 
 
 class Patient:
     def __init__(self, id, transition_prob_matrix):
 
         self.id = id
-        self.markovJump = Markov.MarkovJumpProcess(transition_prob_matrix=transition_prob_matrix)
+        self.transProbMatrix = transition_prob_matrix
         self.stateMonitor = PatientStateMonitor()
 
     def simulate(self, n_time_steps):
 
         # random number generator
-        rng = RVGs.RNG(seed=self.id)
+        rng = np.random.RandomState(seed=self.id)
+        # jump process
+        markov_jump = Markov.MarkovJumpProcess(transition_prob_matrix=self.transProbMatrix)
 
-        k = 0   # simulation time step
+        k = 0  # simulation time step
 
+        # while the patient is alive and simulation length is not yet reached
         while self.stateMonitor.get_if_alive() and k < n_time_steps:
             # sample from the Markov jump process to get a new state
             # (returns an integer from {0, 1, 2, ...})
-            new_state_index = self.markovJump.get_next_state(
+            new_state_index = markov_jump.get_next_state(
                 current_state_index=self.stateMonitor.currentState.value,
                 rng=rng)
 
             # update health state
-            self.stateMonitor.update(time_step=k, new_state=HealthState(new_state_index))
+            self.stateMonitor.update(time_step=k, new_state=HealthStates(new_state_index))
 
             # increment time
             k += 1
@@ -43,32 +47,32 @@ class PatientBonus:
 
     def simulate(self, n_time_steps):
 
-        rng = RVGs.RNG(seed=self.id)
+        rng = np.random.RandomState(seed=self.id)
 
         k = 0
 
         while self.stateMonitor.get_if_alive() and k < n_time_steps:
 
             # if the patient is in Well or Post-Stoke
-            if self.stateMonitor.currentState is HealthState.WELL or HealthState.POST_STROKE:
+            if self.stateMonitor.currentState is HealthStates.WELL or HealthStates.POST_STROKE:
 
                 # find the probability of stroke
-                if self.stateMonitor.currentState is HealthState.WELL:
+                if self.stateMonitor.currentState is HealthStates.WELL:
                     p_stroke = self.probStrokeWell
                 else:
                     p_stroke = self.probRecurrentStroke
 
                 # decide if the patient will have a stroke
-                if rng.sample() < p_stroke:
+                if rng.random_sample() < p_stroke:
 
                     # increment the number of strokes
                     self.stateMonitor.nStrokes += 1
 
                     # decide if the patient will survive this stoke
-                    if rng.sample() < self.probSurvive:
-                        new_state_index = HealthState.POST_STROKE.value
+                    if rng.random_sample() < self.probSurvive:
+                        new_state_index = HealthStates.POST_STROKE.value
                     else:
-                        new_state_index = HealthState.DEAD.value
+                        new_state_index = HealthStates.DEAD.value
 
                 else:  # no stoke
                     new_state_index = self.stateMonitor.currentState
@@ -76,7 +80,7 @@ class PatientBonus:
                 new_state_index = self.stateMonitor.currentState
 
             # update health state
-            self.stateMonitor.update(time_step=k, new_state=HealthState(new_state_index))
+            self.stateMonitor.update(time_step=k, new_state=HealthStates(new_state_index))
 
             # increment time
             k += 1
@@ -85,25 +89,25 @@ class PatientBonus:
 class PatientStateMonitor:
     def __init__(self):
 
-        self.currentState = HealthState.WELL    # assuming everyone starts in "Well"
+        self.currentState = HealthStates.WELL    # assuming everyone starts in "Well"
         self.survivalTime = None
         self.nStrokes = 0
 
     def update(self, time_step, new_state):
 
-        if self.currentState == HealthState.DEAD:
+        if self.currentState == HealthStates.DEAD:
             return
 
-        if new_state == HealthState.DEAD:
+        if new_state == HealthStates.DEAD:
             self.survivalTime = time_step + 0.5  # correct for half cycle effect
 
-        if new_state == HealthState.STROKE:
+        if new_state == HealthStates.STROKE:
             self.nStrokes += 1
 
         self.currentState = new_state
 
     def get_if_alive(self):
-        if self.currentState != HealthState.DEAD:
+        if self.currentState != HealthStates.DEAD:
             return True
         else:
             return False
@@ -118,37 +122,42 @@ class Cohort:
 
     def simulate(self, n_time_steps):
 
-        patients = []
+        # populate the cohort
         for i in range(self.popSize):
-            patient = Patient(
-                id=self.id * self.popSize + i, transition_prob_matrix=self.transitionProbMatrix)
-            patients.append(patient)
-
-        for patient in patients:
+            # create a new patient (use id * pop_size + n as patient id)
+            patient = Patient(id=self.id * self.popSize + i,
+                              transition_prob_matrix=self.transitionProbMatrix)
+            # simulate
             patient.simulate(n_time_steps)
 
-        self.cohortOutcomes.extract_outcomes(patients)
+            # store outputs of this simulation
+            self.cohortOutcomes.extract_outcome(simulated_patient=patient)
+
+        # calculate cohort outcomes
+        self.cohortOutcomes.calculate_cohort_outcomes(initial_pop_size=self.popSize)
 
 
 class CohortBonus:
-    def __init__(self, id, pop_size, prob_stroke_well,prob_recurrent_stroke, prob_survive):
+    def __init__(self, id, pop_size, prob_stroke_well, prob_recurrent_stroke, prob_survive):
         self.id = id
-        self.patients = []
+        self.popSize = pop_size
+        self.probStrokeWell = prob_stroke_well
+        self.probRecurrentStroke = prob_recurrent_stroke
+        self.probSurvive = prob_survive
         self.cohortOutcomes = CohortOutcomes()
-
-        for i in range(pop_size):
-            patient = PatientBonus(id=id* pop_size + i,
-                                   prob_stroke_well=prob_stroke_well,
-                                   prob_recurrent_stroke=prob_recurrent_stroke,
-                                   prob_survive=prob_survive)
-            self.patients.append(patient)
 
     def simulate(self, n_time_steps):
 
-        for patient in self.patients:
+        for i in range(self.popSize):
+            patient = PatientBonus(id=self.id * self.popSize + i,
+                                   prob_stroke_well=self.probStrokeWell,
+                                   prob_recurrent_stroke=self.probRecurrentStroke,
+                                   prob_survive=self.probSurvive)
             patient.simulate(n_time_steps)
 
-        self.cohortOutcomes.extract_outcomes(self.patients)
+            self.cohortOutcomes.extract_outcome(simulated_patient=patient)
+
+        self.cohortOutcomes.calculate_cohort_outcomes(initial_pop_size=self.popSize)
 
 
 class CohortOutcomes:
@@ -159,17 +168,24 @@ class CohortOutcomes:
         self.nLivingPatients = None
         self.meanSurvivalTime = None
 
-    def extract_outcomes(self, simulated_patients):
-        for patient in simulated_patients:
-            if patient.stateMonitor.survivalTime is not None:
-                self.survivalTimes.append(patient.stateMonitor.survivalTime)
-            self.nStrokes.append(patient.stateMonitor.nStrokes)
+    def extract_outcome(self, simulated_patient):
 
+        if simulated_patient.stateMonitor.survivalTime is not None:
+            self.survivalTimes.append(simulated_patient.stateMonitor.survivalTime)
+        self.nStrokes.append(simulated_patient.stateMonitor.nStrokes)
+
+    def calculate_cohort_outcomes(self, initial_pop_size):
+        """ calculates the cohort outcomes
+        :param initial_pop_size: initial population size
+        """
+
+        # calculate mean survival time
         self.meanSurvivalTime = sum(self.survivalTimes) / len(self.survivalTimes)
 
+        # survival curve
         self.nLivingPatients = Path.PrevalencePathBatchUpdate(
             name='# of living patients',
-            initial_size= len(simulated_patients),
+            initial_size=initial_pop_size,
             times_of_changes=self.survivalTimes,
             increments=[-1]*len(self.survivalTimes)
         )

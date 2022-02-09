@@ -1,7 +1,7 @@
 from enum import Enum
 
 # simulation settings
-POP_SIZE = 2000         # cohort population size
+POP_SIZE = 5000         # cohort population size
 SIM_TIME_STEPS = 50    # length of simulation (years)
 
 P_STROKE = 0.05         # annual probability of stroke in state Well
@@ -9,7 +9,7 @@ P_RE_STROKE = 0.2     # annual probability of recurrent stroke
 P_SURV = 0.7       # probability of surviving a stroke
 
 
-class HealthState(Enum):
+class HealthStates(Enum):
     """ health states of patients """
     WELL = 0
     POST_STROKE = 1
