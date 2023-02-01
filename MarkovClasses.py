@@ -1,7 +1,7 @@
 import numpy as np
 
-import SimPy.Markov as Markov
-import SimPy.Plots.SamplePaths as Path
+from deampy.markov import MarkovJumpProcess
+from deampy.plots.sample_paths import PrevalencePathBatchUpdate
 from InputData import HealthStates
 
 
@@ -17,7 +17,7 @@ class Patient:
         # random number generator
         rng = np.random.RandomState(seed=self.id)
         # jump process
-        markov_jump = Markov.MarkovJumpProcess(transition_prob_matrix=self.transProbMatrix)
+        markov_jump = MarkovJumpProcess(transition_prob_matrix=self.transProbMatrix)
 
         k = 0  # simulation time step
 
@@ -183,7 +183,7 @@ class CohortOutcomes:
         self.meanSurvivalTime = sum(self.survivalTimes) / len(self.survivalTimes)
 
         # survival curve
-        self.nLivingPatients = Path.PrevalencePathBatchUpdate(
+        self.nLivingPatients = PrevalencePathBatchUpdate(
             name='# of living patients',
             initial_size=initial_pop_size,
             times_of_changes=self.survivalTimes,

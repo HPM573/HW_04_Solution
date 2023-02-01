@@ -1,6 +1,6 @@
 import MarkovClasses as Cls
-import SimPy.Plots.SamplePaths as Path
-import SimPy.Plots.Histogram as Hist
+import deampy.plots.histogram as hist
+import deampy.plots.sample_paths as path
 import InputData as D
 
 # -------------------------------------------------------------------------
@@ -14,7 +14,7 @@ myCohortNoTemp = Cls.Cohort(id=1,
 myCohortNoTemp.simulate(n_time_steps=D.SIM_TIME_STEPS)
 
 # plot the survival curve
-Path.plot_sample_path(
+path.plot_sample_path(
     sample_path=myCohortNoTemp.cohortOutcomes.nLivingPatients,
     title='Survival Curve (Model without Temp State)',
     x_label='Time Step (Year)',
@@ -22,7 +22,7 @@ Path.plot_sample_path(
 )
 
 # plot histograms of survival times
-Hist.plot_histogram(
+hist.plot_histogram(
     data=myCohortNoTemp.cohortOutcomes.survivalTimes,
     title='Histogram of Patient Survival Time\n(Model without Temp State)',
     x_label='Survival Time (Year)',
@@ -42,7 +42,7 @@ myCohortWithTemp = Cls.Cohort(id=1,
 myCohortWithTemp.simulate(n_time_steps=D.SIM_TIME_STEPS)
 
 # plot the survival curve
-Path.plot_sample_path(
+path.plot_sample_path(
     sample_path=myCohortWithTemp.cohortOutcomes.nLivingPatients,
     title='Survival Curve (Model with Temp State)',
     x_label='Time Step (Year)',
@@ -50,7 +50,7 @@ Path.plot_sample_path(
 )
 
 # plot histograms of survival times
-Hist.plot_histogram(
+hist.plot_histogram(
     data=myCohortWithTemp.cohortOutcomes.survivalTimes,
     title='Histogram of Patient Survival Time\n(Model with Temp State)',
     x_label='Survival Time (Year)',
@@ -59,7 +59,7 @@ Hist.plot_histogram(
 )
 
 # histogram of number of strokes
-Hist.plot_histogram(
+hist.plot_histogram(
     data=myCohortWithTemp.cohortOutcomes.nStrokes,
     title='Histogram of Number of Strokes',
     x_label='Number of Strokes',
@@ -80,7 +80,7 @@ myCohorBonus = Cls.CohortBonus(id=1,
 myCohorBonus.simulate(n_time_steps=D.SIM_TIME_STEPS)
 
 # plot the survival curve
-Path.plot_sample_path(
+path.plot_sample_path(
     sample_path=myCohorBonus.cohortOutcomes.nLivingPatients,
     title='Survival Curve (Bonus model)',
     x_label='Time Step (Year)',
@@ -88,7 +88,7 @@ Path.plot_sample_path(
 )
 
 # plot histograms of survival times
-Hist.plot_histogram(
+hist.plot_histogram(
     data=myCohorBonus.cohortOutcomes.survivalTimes,
     title='Histogram of Patient Survival Time\n(Bonus Model)',
     x_label='Survival Time (Year)',
@@ -97,7 +97,7 @@ Hist.plot_histogram(
 )
 
 # histogram of number of strokes
-Hist.plot_histogram(
+hist.plot_histogram(
     data=myCohorBonus.cohortOutcomes.nStrokes,
     title='Histogram of Number of Strokes (Bonus Model)',
     x_label='Number of Strokes',
