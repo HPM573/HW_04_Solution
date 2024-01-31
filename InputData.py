@@ -2,7 +2,7 @@ from enum import Enum
 
 # simulation settings
 POP_SIZE = 5000         # cohort population size
-SIM_TIME_STEPS = 100    # length of simulation (years)
+SIM_TIME_STEPS = 50    # length of simulation (years)
 
 P_MORTALITY = 0.15  # annual probability of death due to all causes
 P_STROKE = 0.05         # annual probability of stroke in state Well
