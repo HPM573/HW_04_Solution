@@ -19,7 +19,7 @@ path.plot_sample_path(
     title='Survival Curve (Model without Temp State)',
     x_label='Time Step (Year)',
     y_label='Number of Surviving Patients',
-
+    x_range=[0, 50]
 )
 
 # plot histograms of survival times
@@ -47,7 +47,8 @@ path.plot_sample_path(
     sample_path=myCohortWithTemp.cohortOutcomes.nLivingPatients,
     title='Survival Curve (Model with Temp State)',
     x_label='Time Step (Year)',
-    y_label='Number of Surviving Patients'
+    y_label='Number of Surviving Patients',
+    x_range=[0, 50]
 )
 
 # plot histograms of survival times
@@ -67,49 +68,51 @@ hist.plot_histogram(
     y_label='Count',
     bin_width=1
 )
-#
-# # -------------------------------------------------------------------------
-# # ------ Markov model (third version -- more accurate approach) -----------
-# # -------------------------------------------------------------------------
-# myCohorBonus = Cls.CohortBonus(id=1,
-#                                pop_size=D.POP_SIZE,
-#                                prob_stroke_well=D.P_STROKE,
-#                                prob_recurrent_stroke=D.P_RE_STROKE,
-#                                prob_survive=D.P_SURV)
-#
-# # simulate
-# myCohorBonus.simulate(n_time_steps=D.SIM_TIME_STEPS)
-#
-# # plot the survival curve
-# path.plot_sample_path(
-#     sample_path=myCohorBonus.cohortOutcomes.nLivingPatients,
-#     title='Survival Curve (Bonus model)',
-#     x_label='Time Step (Year)',
-#     y_label='Number of Surviving Patients'
-# )
-#
-# # plot histograms of survival times
-# hist.plot_histogram(
-#     data=myCohorBonus.cohortOutcomes.survivalTimes,
-#     title='Histogram of Patient Survival Time\n(Bonus Model)',
-#     x_label='Survival Time (Year)',
-#     y_label='Count',
-#     bin_width=5
-# )
-#
-# # histogram of number of strokes
-# hist.plot_histogram(
-#     data=myCohorBonus.cohortOutcomes.nStrokes,
-#     title='Histogram of Number of Strokes (Bonus Model)',
-#     x_label='Number of Strokes',
-#     y_label='Count',
-#     bin_width=1
-# )
-#
+
+# -------------------------------------------------------------------------
+# ------ Markov model (third version -- more accurate approach) -----------
+# -------------------------------------------------------------------------
+myCohorBonus = Cls.CohortBonus(id=1,
+                               pop_size=D.POP_SIZE,
+                               prob_stroke_well=D.P_STROKE,
+                               prob_recurrent_stroke=D.P_RE_STROKE,
+                               prob_survive=D.P_SURV,
+                               prob_all_cause_death=D.P_MORTALITY)
+
+# simulate
+myCohorBonus.simulate(n_time_steps=D.SIM_TIME_STEPS)
+
+# plot the survival curve
+path.plot_sample_path(
+    sample_path=myCohorBonus.cohortOutcomes.nLivingPatients,
+    title='Survival Curve (Bonus model)',
+    x_label='Time Step (Year)',
+    y_label='Number of Surviving Patients',
+    x_range=[0, 50]
+)
+
+# plot histograms of survival times
+hist.plot_histogram(
+    data=myCohorBonus.cohortOutcomes.survivalTimes,
+    title='Histogram of Patient Survival Time\n(Bonus Model)',
+    x_label='Survival Time (Year)',
+    y_label='Count',
+    bin_width=5
+)
+
+# histogram of number of strokes
+hist.plot_histogram(
+    data=myCohorBonus.cohortOutcomes.nStrokes,
+    title='Histogram of Number of Strokes (Bonus Model)',
+    x_label='Number of Strokes',
+    y_label='Count',
+    bin_width=1
+)
+
 # print the patient survival time
 print('Mean survival time for the model without temp state (years):',
       myCohortNoTemp.cohortOutcomes.meanSurvivalTime)
 print('Mean survival time for the model with temp state (years):',
       myCohortWithTemp.cohortOutcomes.meanSurvivalTime)
-# print('Mean survival time for the bonus model (years):',
-#       myCohorBonus.cohortOutcomes.meanSurvivalTime)
+print('Mean survival time for the bonus model (years):',
+      myCohorBonus.cohortOutcomes.meanSurvivalTime)

@@ -37,12 +37,13 @@ class Patient:
 
 
 class PatientBonus:
-    def __init__(self, id, prob_stroke_well, prob_recurrent_stroke, prob_survive):
+    def __init__(self, id, prob_stroke_well, prob_recurrent_stroke, prob_survive, prob_all_cause_death):
 
         self.id = id
         self.probStrokeWell = prob_stroke_well
         self.probRecurrentStroke = prob_recurrent_stroke
         self.probSurvive = prob_survive
+        self.probAllCauseDeath = prob_all_cause_death
         self.stateMonitor = PatientStateMonitor()
 
     def simulate(self, n_time_steps):
@@ -53,31 +54,33 @@ class PatientBonus:
 
         while self.stateMonitor.get_if_alive() and k < n_time_steps:
 
-            # if the patient is in Well or Post-Stoke
-            if self.stateMonitor.currentState is HealthStates.WELL or HealthStates.POST_STROKE:
-
-                # find the probability of stroke
-                if self.stateMonitor.currentState is HealthStates.WELL:
-                    p_stroke = self.probStrokeWell
+            # if the patient is alive, decide if the patient will die from all-cause mortality
+            if self.stateMonitor.currentState in (HealthStates.WELL, HealthStates.POST_STROKE):
+                # if the patient dies from all-cause mortality
+                if rng.random_sample() < self.probAllCauseDeath:
+                    new_state_index = HealthStates.ALL_CAUSE_DEATH.value
                 else:
-                    p_stroke = self.probRecurrentStroke
 
-                # decide if the patient will have a stroke
-                if rng.random_sample() < p_stroke:
-
-                    # increment the number of strokes
-                    self.stateMonitor.nStrokes += 1
-
-                    # decide if the patient will survive this stoke
-                    if rng.random_sample() < self.probSurvive:
-                        new_state_index = HealthStates.POST_STROKE.value
+                    # find the probability of stroke
+                    if self.stateMonitor.currentState is HealthStates.WELL:
+                        p_stroke = self.probStrokeWell
                     else:
-                        new_state_index = HealthStates.STROKE_DEATH.value
+                        p_stroke = self.probRecurrentStroke
 
-                else:  # no stoke
-                    new_state_index = self.stateMonitor.currentState
-            else:
-                new_state_index = self.stateMonitor.currentState
+                    # decide if the patient will have a stroke
+                    if rng.random_sample() < p_stroke:
+
+                        # increment the number of strokes
+                        self.stateMonitor.nStrokes += 1
+
+                        # decide if the patient will survive this stoke
+                        if rng.random_sample() < self.probSurvive:
+                            new_state_index = HealthStates.POST_STROKE.value
+                        else:
+                            new_state_index = HealthStates.STROKE_DEATH.value
+
+                    else:  # no stoke
+                        new_state_index = self.stateMonitor.currentState
 
             # update health state
             self.stateMonitor.update(time_step=k, new_state=HealthStates(new_state_index))
@@ -138,12 +141,13 @@ class Cohort:
 
 
 class CohortBonus:
-    def __init__(self, id, pop_size, prob_stroke_well, prob_recurrent_stroke, prob_survive):
+    def __init__(self, id, pop_size, prob_stroke_well, prob_recurrent_stroke, prob_survive, prob_all_cause_death):
         self.id = id
         self.popSize = pop_size
         self.probStrokeWell = prob_stroke_well
         self.probRecurrentStroke = prob_recurrent_stroke
         self.probSurvive = prob_survive
+        self.probAllCauseDeath = prob_all_cause_death
         self.cohortOutcomes = CohortOutcomes()
 
     def simulate(self, n_time_steps):
@@ -152,7 +156,8 @@ class CohortBonus:
             patient = PatientBonus(id=self.id * self.popSize + i,
                                    prob_stroke_well=self.probStrokeWell,
                                    prob_recurrent_stroke=self.probRecurrentStroke,
-                                   prob_survive=self.probSurvive)
+                                   prob_survive=self.probSurvive,
+                                   prob_all_cause_death=self.probAllCauseDeath)
             patient.simulate(n_time_steps)
 
             self.cohortOutcomes.extract_outcome(simulated_patient=patient)
