@@ -72,7 +72,7 @@ class PatientBonus:
                     if rng.random_sample() < self.probSurvive:
                         new_state_index = HealthStates.POST_STROKE.value
                     else:
-                        new_state_index = HealthStates.DEAD.value
+                        new_state_index = HealthStates.STROKE_DEATH.value
 
                 else:  # no stoke
                     new_state_index = self.stateMonitor.currentState
@@ -95,10 +95,10 @@ class PatientStateMonitor:
 
     def update(self, time_step, new_state):
 
-        if self.currentState == HealthStates.DEAD:
+        if self.currentState in (HealthStates.STROKE_DEATH, HealthStates.ALL_CAUSE_DEATH):
             return
 
-        if new_state == HealthStates.DEAD:
+        if new_state in (HealthStates.STROKE_DEATH, HealthStates.ALL_CAUSE_DEATH):
             self.survivalTime = time_step + 0.5  # correct for half cycle effect
 
         if new_state == HealthStates.STROKE:
@@ -107,10 +107,10 @@ class PatientStateMonitor:
         self.currentState = new_state
 
     def get_if_alive(self):
-        if self.currentState != HealthStates.DEAD:
-            return True
-        else:
+        if self.currentState in (HealthStates.STROKE_DEATH, HealthStates.ALL_CAUSE_DEATH):
             return False
+        else:
+            return True
 
 
 class Cohort:
